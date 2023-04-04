@@ -6,7 +6,7 @@
 /*   By: migo <migo@student.42seoul.kr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 16:34:11 by migo              #+#    #+#             */
-/*   Updated: 2023/03/30 17:00:23 by migo             ###   ########.fr       */
+/*   Updated: 2023/04/04 16:56:31 by migo             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ typedef struct s_philo
 	double			st_sl_time;
 	int				timeflag;
 	int				*fork;
+	pthread_mutex_t	*mutex;
 }t_philo;
 
 void	fork_utils(t_philo *philo, int left, int right, int me);
@@ -40,5 +41,7 @@ int		argument_error(void);
 int		ft_atoi(char *str);
 void	one_fork(t_philo *philo);
 void	*philo_to_do(void *data);
+int		check_argument(char **argv);
+void	*malloc_error(void);
 
 #endif
