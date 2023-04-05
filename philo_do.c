@@ -64,7 +64,6 @@ void	philo_eat(t_philo *philo)
 			philo->lasteat_time = now_time;
 			break ;
 		}
-		usleep(1000);
 	}
 }
 
@@ -91,7 +90,6 @@ void	philo_sleep(t_philo *philo)
 		now_time = mytime.tv_sec * 1000 + (mytime.tv_usec / 1000);
 		if (now_time - philo->st_sl_time > philo->time_to_sleep)
 			break ;
-		usleep(1000);
 	}
 }
 
@@ -121,7 +119,7 @@ void	*philo_to_do(void *data)
 	pthread_mutex_lock(philo->mutex);
 	pthread_mutex_unlock(philo->mutex);
 	if (philo->philo_name % 2 == 1)
-		usleep(10000);
+		usleep(10);
 	while (1)
 	{
 		if (philo->timeflag == 9)

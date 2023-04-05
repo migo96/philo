@@ -66,7 +66,7 @@ int	check_die(t_philo *philo, int num)
 		if (now_time - philo[i].lasteat_time >= philo[i].time_to_die)
 		{
 			pthread_mutex_lock(philo->print);
-			if (philo[i].lasteat_time != 0)
+			if (philo[i].lasteat_time != 0 && philo[i].timeflag != 9)
 			{
 				printf("%.f philo", now_time - philo[i].st_time);
 				printf(" %d died\n", philo[i].philo_name);

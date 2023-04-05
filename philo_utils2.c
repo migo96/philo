@@ -41,6 +41,14 @@ void	make_thread(t_philo *philo, char **argv, pthread_t	*pthread)
 	pthread_mutex_lock(philo->mutex);
 	while (++i < ft_atoi(argv[1]))
 		pthread_create(&pthread[i], NULL, philo_to_do, (void *)&philo[i]);
+	if (check_die(philo, ft_atoi(argv[1])) == 1)
+	{
+		i = -1;
+		pthread_mutex_lock(philo->print);
+		while (++i < philo[0].philo_num)
+			philo[i].timeflag = 9;
+		pthread_mutex_unlock(philo->print);
+	}
 	pthread_mutex_unlock(philo->mutex);
 }
 
@@ -51,8 +59,10 @@ void	free_join_pthread(t_philo *philo, pthread_t *pthread, char **argv)
 	i = -1;
 	while (++i < ft_atoi(argv[1]))
 		pthread_join(pthread[i], NULL);
-	free (philo->mutex);
 	free (philo->fork);
+	pthread_mutex_destroy(philo->mutex);
+	pthread_mutex_destroy(philo->print);
+	free (philo->mutex);
 	free (philo->print);
 	free (philo);
 	free (pthread);
