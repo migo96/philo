@@ -39,7 +39,7 @@ int	check_argument(char **argv)
 	while (argv[i])
 	{
 		j = 0;
-		while(argv[i][j])
+		while (argv[i][j])
 		{
 			if (argv[i][j] < '0' || argv[i][j] > '9')
 				return (1);
@@ -47,34 +47,9 @@ int	check_argument(char **argv)
 		}
 		i++;
 	}
+	if (ft_atoi(argv[1]) == 0)
+		return (1);
 	return (0);
-}
-
-void	*malloc_error(void)
-{
-	printf("malloc error\n");
-	return (NULL);
-}
-
-int	argument_error(void)
-{
-	printf("argument error\n");
-	return (1);
-}
-
-int	ct_fork(t_philo *philo)
-{
-	int	i;
-	int	num;
-
-	i = 0;
-	num = 0;
-	while (i < philo->philo_num)
-	{
-		num = num + philo->fork[i];
-		i++;
-	}
-	return (philo->philo_num - num);
 }
 
 int	check_die(t_philo *philo, int num)
@@ -88,13 +63,15 @@ int	check_die(t_philo *philo, int num)
 	now_time = mytime.tv_sec * 1000 + (mytime.tv_usec / 1000);
 	while (i < num)
 	{
-		if (now_time - philo[i].lasteat_time == philo[i].time_to_die)
+		if (now_time - philo[i].lasteat_time >= philo[i].time_to_die)
 		{
+			pthread_mutex_lock(philo->print);
 			if (philo[i].lasteat_time != 0)
 			{
 				printf("%.f philo", now_time - philo[i].st_time);
 				printf(" %d died\n", philo[i].philo_name);
 			}
+			pthread_mutex_unlock(philo->print);
 			return (1);
 		}
 		i++;
@@ -106,19 +83,10 @@ void	fork_utils(t_philo *philo, int left, int right, int me)
 {
 	struct timeval	mytime;
 	double			now_time;
-	// int				num_fork;
 
 	gettimeofday(&mytime, NULL);
 	now_time = mytime.tv_sec * 1000 + (mytime.tv_usec / 1000);
-	// num_fork = ct_fork(philo);
-	// if (philo->fork[right] == 0 && philo->fork[left] == 0 && num_fork > 1 && philo->timeflag != 9)
-	// {
-	// 	printf("%.f philo %d has taken a right fork\n",
-	// 		now_time - philo->st_time, philo->philo_name);
-	// 	printf("%.f philo %d has taken a left fork\n",
-	// 		now_time - philo->st_time, philo->philo_name);
-	// 	philo->fork[me] = 2;
-	// }
+	pthread_mutex_lock(philo->print);
 	if (philo->fork[right] == 0 && philo->fork[me] == 0 && philo->timeflag != 9)
 	{
 		printf("%.f philo %d has taken a right fork\n",
@@ -131,7 +99,7 @@ void	fork_utils(t_philo *philo, int left, int right, int me)
 			now_time - philo->st_time, philo->philo_name);
 			philo->fork[me]++;
 	}
-
+	pthread_mutex_unlock(philo->print);
 }
 
 void	one_fork(t_philo *philo)
@@ -141,10 +109,12 @@ void	one_fork(t_philo *philo)
 
 	gettimeofday(&mytime, NULL);
 	now_time = mytime.tv_sec * 1000 + (mytime.tv_usec / 1000);
+	pthread_mutex_lock(philo->print);
 	if (philo->fork[0] == 0 && philo->timeflag != 9)
 	{
 		printf("%.f philo %d has taken a left fork\n",
 			now_time - philo->st_time, philo->philo_name);
 		philo->fork[0] = 1;
 	}
+	pthread_mutex_unlock(philo->print);
 }

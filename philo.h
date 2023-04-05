@@ -33,6 +33,7 @@ typedef struct s_philo
 	int				timeflag;
 	int				*fork;
 	pthread_mutex_t	*mutex;
+	pthread_mutex_t	*print;
 }t_philo;
 
 void	fork_utils(t_philo *philo, int left, int right, int me);
@@ -43,5 +44,11 @@ void	one_fork(t_philo *philo);
 void	*philo_to_do(void *data);
 int		check_argument(char **argv);
 void	*malloc_error(void);
+int		*make_fork(char **argv);
+void	make_data(t_philo *new, int i, char **argv);
+void	make_thread(t_philo *philo, char **argv, pthread_t	*pthread);
+void	free_join_pthread(t_philo *philo, pthread_t *pthread, char **argv);
+void	*malloc_error(void);
+int		argument_error(void);
 
 #endif
