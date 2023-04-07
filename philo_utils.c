@@ -6,7 +6,7 @@
 /*   By: migo <migo@student.42seoul.kr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 16:40:56 by migo              #+#    #+#             */
-/*   Updated: 2023/04/04 15:23:47 by migo             ###   ########.fr       */
+/*   Updated: 2023/04/07 17:15:02 by migo             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,15 +58,15 @@ int	check_die(t_philo *philo, int num)
 	struct timeval	mytime;
 	double			now_time;
 
-	i = 0;
+	i = -1;
 	gettimeofday(&mytime, NULL);
 	now_time = mytime.tv_sec * 1000 + (mytime.tv_usec / 1000);
-	while (i < num)
+	while (++i < num)
 	{
+		pthread_mutex_lock(philo->print);
 		if (now_time - philo[i].lasteat_time >= philo[i].time_to_die)
 		{
-			pthread_mutex_lock(philo->print);
-			if (philo[i].lasteat_time != 0 && philo[i].timeflag != 9)
+			if (philo[i].timeflag != 9)
 			{
 				printf("%.f philo", now_time - philo[i].st_time);
 				printf(" %d died\n", philo[i].philo_name);
@@ -74,47 +74,33 @@ int	check_die(t_philo *philo, int num)
 			pthread_mutex_unlock(philo->print);
 			return (1);
 		}
-		i++;
+		pthread_mutex_unlock(philo->print);
 	}
-	return (0);
+	i = -1;
+	pthread_mutex_lock(philo->print);
+	while (++i < num)
+	{
+		if (philo[i].eat_number != 0)
+		{
+			pthread_mutex_unlock(philo->print);
+			return (0);
+		}
+	}
+	printf("everyone eat max");
+	pthread_mutex_unlock(philo->print);
+	return (1);
 }
 
-void	fork_utils(t_philo *philo, int left, int right, int me)
+void	*one_fork(t_philo *philo)
 {
 	struct timeval	mytime;
-	double			now_time;
+	unsigned long	now_time;
 
 	gettimeofday(&mytime, NULL);
 	now_time = mytime.tv_sec * 1000 + (mytime.tv_usec / 1000);
 	pthread_mutex_lock(philo->print);
-	if (philo->fork[right] == 0 && philo->fork[me] == 0 && philo->timeflag != 9)
-	{
-		printf("%.f philo %d has taken a right fork\n",
-			now_time - philo->st_time, philo->philo_name);
-			philo->fork[me]++;
-	}
-	if (philo->fork[left] == 0 && philo->fork[me] == 1 && philo->timeflag != 9)
-	{
-		printf("%.f philo %d has taken a left fork\n",
-			now_time - philo->st_time, philo->philo_name);
-			philo->fork[me]++;
-	}
+	printf("%.f philo %d has taken a left fork\n",
+		now_time - philo->st_time, philo->philo_name);
 	pthread_mutex_unlock(philo->print);
-}
-
-void	one_fork(t_philo *philo)
-{
-	struct timeval	mytime;
-	double			now_time;
-
-	gettimeofday(&mytime, NULL);
-	now_time = mytime.tv_sec * 1000 + (mytime.tv_usec / 1000);
-	pthread_mutex_lock(philo->print);
-	if (philo->fork[0] == 0 && philo->timeflag != 9)
-	{
-		printf("%.f philo %d has taken a left fork\n",
-			now_time - philo->st_time, philo->philo_name);
-		philo->fork[0] = 1;
-	}
-	pthread_mutex_unlock(philo->print);
+	return (NULL);
 }

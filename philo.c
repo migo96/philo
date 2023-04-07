@@ -6,11 +6,32 @@
 /*   By: migo <migo@student.42seoul.kr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 12:46:16 by migo              #+#    #+#             */
-/*   Updated: 2023/04/04 17:13:35 by migo             ###   ########.fr       */
+/*   Updated: 2023/04/07 17:22:03 by migo             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
+
+void	*free_philo(t_philo *philo)
+{
+	free (philo);
+	return (NULL);
+}
+
+int	free_philo_mutex(t_philo *philo)
+{
+	free (philo->mutex);
+	free (philo);
+	return (malloc_error());
+}
+
+pthread_t	*make_pthread(char **argv)
+{
+	pthread_t	*new;
+
+	new = (pthread_t *)malloc(sizeof(pthread_t) * ft_atoi(argv[1]));
+	return (new);
+}
 
 int	*make_fork(char **argv)
 {
@@ -27,77 +48,53 @@ int	*make_fork(char **argv)
 	return (fork);
 }
 
-t_philo	*make_philo(char **argv, int i)
+t_philo	*make_philo(char **argv, int i, int j, int num)
 {
 	t_philo			*new;
 	pthread_mutex_t	*mutex;
 	pthread_mutex_t	*print;
-	int				*fork;
 
-	new = (t_philo *)malloc(sizeof(t_philo) * ft_atoi(argv[1]));
-	mutex = malloc(sizeof(pthread_mutex_t) * 1);
+	new = (t_philo *) malloc(sizeof(t_philo) * num);
+	if (new == NULL)
+		return (NULL);
+	mutex = malloc(sizeof(pthread_mutex_t) * num);
+	if (mutex == NULL)
+		return (free_philo(new));
 	print = malloc(sizeof(pthread_mutex_t) * 1);
-	fork = make_fork(argv);
-	if (new == NULL || mutex == NULL || fork == NULL || print == NULL)
-		return (new);
-	pthread_mutex_init(mutex, NULL);
+	while (++i < num)
+		pthread_mutex_init(&mutex[i], NULL);
 	pthread_mutex_init(print, NULL);
-	make_data(new, i, argv);
-	while (++i < ft_atoi(argv[1]))
+	make_data(new, j, argv);
+	while (++j < num)
 	{
-		new[i].fork = fork;
-		new[i].mutex = mutex;
-		new[i].print = print;
+		new[j].left = &mutex[j];
+		if (j + 1 == num)
+			new[j].right = &mutex[0];
+		else
+			new[j]. right = &mutex[j + 1];
+		new[j].print = print;
+		new[j].mutex = mutex;
 	}
 	return (new);
-}
-
-pthread_t	*make_pthread(char **argv)
-{
-	pthread_t	*new;
-
-	new = (pthread_t *)malloc(sizeof(pthread_t) * ft_atoi(argv[1]));
-	return (new);
-}
-
-void	*table_to_sit(void *data)
-{
-	char		**argv;
-	t_philo		*philo;
-	pthread_t	*pthread;
-	int			i;
-
-	argv = (char **)data;
-	philo = make_philo(argv, -1);
-	pthread = make_pthread(argv);
-	if (philo == NULL || pthread == NULL)
-		return (malloc_error);
-	make_thread(philo, argv, pthread);
-	while (1)
-	{
-		if (check_die(philo, ft_atoi(argv[1])) == 1)
-		{
-			i = -1;
-			pthread_mutex_lock(philo->print);
-			while (++i < philo[0].philo_num)
-				philo[i].timeflag = 9;
-			pthread_mutex_unlock(philo->print);
-			break ;
-		}
-	}
-	free_join_pthread(philo, pthread, argv);
-	return (NULL);
 }
 
 int	main(int argc, char **argv)
 {
-	pthread_t	pthread;
+	t_philo		*philo;
+	pthread_t	*pthread;
 
 	if (argc != 5 && argc != 6)
 		return (argument_error());
 	if (check_argument(argv))
 		return (argument_error());
-	pthread_create(&pthread, NULL, table_to_sit, (void *)argv);
-	pthread_join(pthread, NULL);
+	philo = make_philo(argv, -1, -1, ft_atoi(argv[1]));
+	if (philo == NULL)
+		return (malloc_error());
+	pthread = make_pthread(argv);
+	if (pthread == NULL)
+		free_philo_mutex(philo);
+	make_thread(philo, argv, pthread);
+	signal_philo(philo);
+	free_join_pthread(philo, pthread, argv);
 	return (0);
 }
