@@ -6,7 +6,7 @@
 /*   By: migo <migo@student.42seoul.kr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 16:33:56 by migo              #+#    #+#             */
-/*   Updated: 2023/04/07 17:30:33 by migo             ###   ########.fr       */
+/*   Updated: 2023/04/10 17:52:01 by migo             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,46 +14,13 @@
 
 void	philo_fork(t_philo *philo)
 {
-	struct timeval	mytime;
-	double			now_time;
-
 	if (philo->philo_name % 2 == 0)
 	{
-		pthread_mutex_lock(philo->left);
-		pthread_mutex_lock(philo->print);
-		gettimeofday(&mytime, NULL);
-		now_time = mytime.tv_sec * 1000 + (mytime.tv_usec / 1000);
-		if (philo->timeflag != 9)
-			printf("%.f philo %d has taken a left fork\n",
-				now_time - philo->st_time, philo->philo_name);
-		pthread_mutex_unlock(philo->print);
-		pthread_mutex_lock(philo->right);
-		pthread_mutex_lock(philo->print);
-		gettimeofday(&mytime, NULL);
-		now_time = mytime.tv_sec * 1000 + (mytime.tv_usec / 1000);
-		if (philo->timeflag != 9)
-			printf("%.f philo %d has taken a right fork\n",
-				now_time - philo->st_time, philo->philo_name);
-		pthread_mutex_unlock(philo->print);
+		philo_even(philo);
 	}
 	else
 	{
-		pthread_mutex_lock(philo->right);
-		pthread_mutex_lock(philo->print);
-		gettimeofday(&mytime, NULL);
-		now_time = mytime.tv_sec * 1000 + (mytime.tv_usec / 1000);
-		if (philo->timeflag != 9)
-			printf("%.f philo %d has taken a right fork\n",
-				now_time - philo->st_time, philo->philo_name);
-		pthread_mutex_unlock(philo->print);
-		pthread_mutex_lock(philo->left);
-		pthread_mutex_lock(philo->print);
-		gettimeofday(&mytime, NULL);
-		now_time = mytime.tv_sec * 1000 + (mytime.tv_usec / 1000);
-		if (philo->timeflag != 9)
-			printf("%.f philo %d has taken a left fork\n",
-				now_time - philo->st_time, philo->philo_name);
-		pthread_mutex_unlock(philo->print);
+		philo_odd(philo);
 	}
 }
 
@@ -66,7 +33,8 @@ void	philo_eat(t_philo *philo)
 	now_time = mytime.tv_sec * 1000 + (mytime.tv_usec / 1000);
 	philo->st_eat_time = now_time;
 	pthread_mutex_lock(philo->print);
-	philo->eat_number--;
+	if (philo->eat_number > 0)
+		philo->eat_number--;
 	philo->lasteat_time = now_time;
 	if (philo->timeflag != 9)
 		printf("%.f philo %d eating\n",
@@ -137,8 +105,7 @@ void	*philo_to_do(void *data)
 		pthread_mutex_unlock(philo->print);
 		philo_fork(philo);
 		philo_eat(philo);
-		pthread_mutex_unlock(philo->left);
-		pthread_mutex_unlock(philo->right);
+		philo_put_down(philo);
 		philo_sleep(philo);
 		philo_think(philo);
 	}

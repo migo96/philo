@@ -6,23 +6,29 @@
 /*   By: migo <migo@student.42seoul.kr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/30 12:46:16 by migo              #+#    #+#             */
-/*   Updated: 2023/04/07 17:22:03 by migo             ###   ########.fr       */
+/*   Updated: 2023/04/10 18:06:52 by migo             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-void	*free_philo(t_philo *philo)
+void	free_join_pthread(t_philo *philo, pthread_t *pthread, char **argv)
 {
-	free (philo);
-	return (NULL);
-}
+	int	i;
+	int	num;
 
-int	free_philo_mutex(t_philo *philo)
-{
+	num = ft_atoi(argv[1]);
+	i = -1;
+	while (++i < num)
+		pthread_join(pthread[i], NULL);
+	i = -1;
+	while (++i < num)
+		pthread_mutex_destroy(&philo->mutex[i]);
+	philo->eat_number = 5;
 	free (philo->mutex);
 	free (philo);
-	return (malloc_error());
+	free (pthread);
+	return ;
 }
 
 pthread_t	*make_pthread(char **argv)
@@ -40,6 +46,8 @@ int	*make_fork(char **argv)
 
 	i = 0;
 	fork = malloc(sizeof(int) * ft_atoi(argv[1]));
+	if (fork == NULL)
+		return (NULL);
 	while (i < ft_atoi(argv[1]))
 	{
 		fork[i] = 0;
@@ -53,28 +61,26 @@ t_philo	*make_philo(char **argv, int i, int j, int num)
 	t_philo			*new;
 	pthread_mutex_t	*mutex;
 	pthread_mutex_t	*print;
+	int				*fork;
 
 	new = (t_philo *) malloc(sizeof(t_philo) * num);
 	if (new == NULL)
 		return (NULL);
 	mutex = malloc(sizeof(pthread_mutex_t) * num);
 	if (mutex == NULL)
-		return (free_philo(new));
+		return (new);
 	print = malloc(sizeof(pthread_mutex_t) * 1);
+	if (print == NULL)
+		return (new);
+	fork = make_fork(argv);
+	if (fork == NULL)
+		return (NULL);
 	while (++i < num)
 		pthread_mutex_init(&mutex[i], NULL);
 	pthread_mutex_init(print, NULL);
 	make_data(new, j, argv);
-	while (++j < num)
-	{
-		new[j].left = &mutex[j];
-		if (j + 1 == num)
-			new[j].right = &mutex[0];
-		else
-			new[j]. right = &mutex[j + 1];
-		new[j].print = print;
-		new[j].mutex = mutex;
-	}
+	mk_data2(new, mutex, print);
+	mk_data3(new, fork);
 	return (new);
 }
 
@@ -85,14 +91,19 @@ int	main(int argc, char **argv)
 
 	if (argc != 5 && argc != 6)
 		return (argument_error());
-	if (check_argument(argv))
+	if (check_argument(argv) == 1)
 		return (argument_error());
+	if (check_argument(argv) == 2)
+		return (die_time_error());
+	if (check_argument(argv) == 3)
+		return (1);
 	philo = make_philo(argv, -1, -1, ft_atoi(argv[1]));
-	if (philo == NULL)
+	if (philo == NULL || philo->mutex == NULL
+		|| philo->print == NULL || philo->fork == NULL)
 		return (malloc_error());
 	pthread = make_pthread(argv);
 	if (pthread == NULL)
-		free_philo_mutex(philo);
+		return (malloc_error());
 	make_thread(philo, argv, pthread);
 	signal_philo(philo);
 	free_join_pthread(philo, pthread, argv);
